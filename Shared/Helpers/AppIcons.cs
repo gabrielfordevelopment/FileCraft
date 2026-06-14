@@ -25,6 +25,7 @@ namespace FileCraft.Shared.Helpers
         public static IconDefinition FileContentExport => new(MaterialIcons.topic, ResourceKeys.FolderIconBrush);
         public static IconDefinition TreeGenerator => new(MaterialIcons.park, ResourceKeys.TreeIconBrush);
         public static IconDefinition FolderContentExport => new(MaterialIcons.dns, ResourceKeys.PrimaryBrush);
+        public static IconDefinition CsvViewer => new(MaterialIcons.table_view, ResourceKeys.PrimaryBrush);
         public static IconDefinition Options => new(MaterialIcons.settings, ResourceKeys.GrayTextBrush);
 
         public static IconDefinition Undo => new(MaterialIcons.keyboard_arrow_left, ResourceKeys.TextBrush);

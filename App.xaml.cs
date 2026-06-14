@@ -48,6 +48,9 @@ namespace FileCraft
             services.AddSingleton<IWindowFactory, WindowFactory>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IFileOperationService, FileOperationService>();
+            services.AddSingleton<ICsvDelimiterDetector, CsvDelimiterDetector>();
+            services.AddSingleton<ICsvParsingService, CsvParsingService>();
+            services.AddSingleton<IClipboardService, ClipboardService>();
             services.AddSingleton<IFolderTreeService, FolderTreeService>();
             services.AddSingleton<ISaveService, SaveService>();
             services.AddSingleton<ISharedStateService, SharedStateService>();
@@ -63,6 +66,7 @@ namespace FileCraft
             services.AddSingleton<FileContentExportViewModel>();
             services.AddSingleton<TreeGeneratorViewModel>();
             services.AddSingleton<FolderContentExportViewModel>();
+            services.AddSingleton<CsvViewerViewModel>();
 
             services.AddSingleton<OptionsPresetsViewModel>();
             services.AddSingleton<OptionsTreeToolsViewModel>();

@@ -8,6 +8,7 @@ namespace FileCraft.Services.Interfaces
     public interface IDialogService
     {
         string? SelectFolder(string description);
+        string? SelectFile(string title, string filter);
         void ShowNotification(string title, string message, DialogIconType iconType);
         bool ShowConfirmation(string title, string message, DialogIconType iconType, int? filesAffected = null);
         bool ShowCopyTreeConfirmation(string title, DialogIconType iconType, CopyTreeConfirmationViewModel contentViewModel);

@@ -1,0 +1,318 @@
+<UserControl x:Class="FileCraft.Views.CsvViewerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewmodels="clr-namespace:FileCraft.ViewModels.Functional"
+             xmlns:models="clr-namespace:FileCraft.Models"
+             xmlns:converters="clr-namespace:FileCraft.Shared.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=viewmodels:CsvViewerViewModel, IsDesignTimeCreatable=False}"
+             d:DesignHeight="600" d:DesignWidth="900">
+
+    <UserControl.Resources>
+        <converters:EnumEqualsConverter x:Key="EnumEqualsConverter"/>
+
+        <Style x:Key="CsvCellCopyButtonStyle" TargetType="Button" BasedOn="{StaticResource BorderlessIconButton}">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="Focusable" Value="True"/>
+            <Setter Property="ToolTip" Value="{DynamicResource CsvViewer_CopyCellTooltip}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=DataGridCell}}" Value="True">
+                    <Setter Property="Opacity" Value="1"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=DataGridCell}}" Value="True">
+                    <Setter Property="Opacity" Value="1"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CsvDataGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ComboBoxItemHighlightBrush}"/>
+                    <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CsvDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border x:Name="HeaderBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ContentPresenter Grid.Column="0"
+                                                  Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  RecognizesAccessKey="True"/>
+
+                                <Path x:Name="SortArrow"
+                                      Grid.Column="1"
+                                      Width="8"
+                                      Height="5"
+                                      Margin="8,0,0,0"
+                                      Fill="{StaticResource PrimaryBrush}"
+                                      Stretch="Fill"
+                                      Visibility="Collapsed"
+                                      Data="M 0 4 L 4 0 L 8 4 Z"
+                                      VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="HeaderBorder" Property="Background" Value="{StaticResource ComboBoxItemHighlightBrush}"/>
+                            </Trigger>
+                            <Trigger Property="SortDirection" Value="Ascending">
+                                <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="SortArrow" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="0" CenterX="4" CenterY="2.5"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="SortDirection" Value="Descending">
+                                <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="SortArrow" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="180" CenterX="4" CenterY="2.5"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Grid.Row="0" Header="{DynamicResource CsvViewer_InputHeader}" Margin="0,0,0,8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                        <RadioButton Content="{DynamicResource CsvViewer_FileInputMode}"
+                                     IsChecked="{Binding InputMode, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static models:CsvInputMode.File}}"
+                                     GroupName="CsvInputMode"
+                                     Margin="0,0,8,0"/>
+                        <RadioButton Content="{DynamicResource CsvViewer_PastedInputMode}"
+                                     GroupName="CsvInputMode"
+                                     IsChecked="{Binding InputMode, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static models:CsvInputMode.PastedText}}"/>
+                    </StackPanel>
+
+                    <TextBox Grid.Column="1"
+                             Style="{StaticResource ModernPathTextBoxStyle}"
+                             Text="{Binding SelectedFilePath, Mode=OneWay}"
+                             ToolTip="{Binding SelectedFilePath}"
+                             Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="2"
+                            Content="{DynamicResource BrowseButton}"
+                            Command="{Binding SelectCsvFileCommand}"
+                            Margin="{StaticResource RightMargin}"/>
+
+                    <Button Grid.Column="3"
+                            Content="{DynamicResource ClearButton}"
+                            Command="{Binding ClearCommand}"
+                            Style="{StaticResource WarningButton}"/>
+                </Grid>
+
+                <TextBox Grid.Row="1"
+                         Style="{StaticResource ModernTextBoxStyle}"
+                         Text="{Binding PastedCsvText, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         MinHeight="70"
+                         MaxHeight="130"
+                         TextWrapping="NoWrap"
+                         ToolTip="{DynamicResource CsvViewer_PasteInputTooltip}"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Header="{DynamicResource CsvViewer_OptionsHeader}" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="{DynamicResource CsvViewer_DelimiterModeLabel}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <RadioButton Content="{DynamicResource CsvViewer_DelimiterAuto}"
+                                 GroupName="CsvDelimiterMode"
+                                 IsChecked="{Binding DelimiterMode, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static models:CsvDelimiterMode.Auto}}"
+                                 Margin="0,0,8,0"/>
+                    <RadioButton Content="{DynamicResource CsvViewer_DelimiterManual}"
+                                 GroupName="CsvDelimiterMode"
+                                 IsChecked="{Binding DelimiterMode, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static models:CsvDelimiterMode.Manual}}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="{DynamicResource CsvViewer_ManualDelimiterLabel}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox ItemsSource="{Binding DelimiterOptions}"
+                              SelectedValue="{Binding ManualDelimiter, Mode=TwoWay}"
+                              SelectedValuePath="Value"
+                              DisplayMemberPath="Label"
+                              Width="80"/>
+                </StackPanel>
+
+                <CheckBox Grid.Column="2"
+                          Content="{DynamicResource CsvViewer_FirstRowHeader}"
+                          IsChecked="{Binding HasHeaderRecord}"
+                          VerticalAlignment="Center"
+                          Margin="0,0,16,0"/>
+
+                <DockPanel Grid.Column="3" VerticalAlignment="Center">
+                    <TextBlock Text="{DynamicResource Common_SearchLabel}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <Grid>
+                        <TextBox Style="{StaticResource ModernTextBoxStyle}"
+                                 Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Text="{DynamicResource CsvViewer_SearchPlaceholder}"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,0,0"
+                                   Foreground="{StaticResource GrayTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchFilter}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </DockPanel>
+
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Margin="10,0,0,0">
+                    <Button Content="{DynamicResource FileContent_ClearFilterButton}"
+                            Command="{Binding ClearFilterCommand}"
+                            IsEnabled="{Binding CanClearFilter}"
+                            Style="{StaticResource DangerButton}"
+                            Margin="{StaticResource RightMargin}"/>
+                    <Button Content="{DynamicResource CsvViewer_LoadButton}"
+                            Command="{Binding LoadCsvCommand}"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="2">
+            <GroupBox.Header>
+                <StackPanel Style="{StaticResource HeaderStackPanelStyle}">
+                    <TextBlock Text="{DynamicResource CsvViewer_TableHeader}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding WarningSummary}" Foreground="{StaticResource GrayTextBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </GroupBox.Header>
+
+            <DataGrid x:Name="CsvDataGrid"
+                      ItemsSource="{Binding FilteredRows}"
+                      AutoGenerateColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="None"
+                      RowHeight="32"
+                      EnableRowVirtualization="True"
+                      EnableColumnVirtualization="True"
+                      ScrollViewer.CanContentScroll="True"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      BorderThickness="0"
+                      CellStyle="{StaticResource CsvDataGridCellStyle}"
+                      ColumnHeaderStyle="{StaticResource CsvDataGridColumnHeaderStyle}"/>
+        </GroupBox>
+
+        <Grid Grid.Row="3" Margin="4,8,4,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding StatusText}"
+                       Foreground="{StaticResource GrayTextBrush}"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock>
+                    <Run Text="{DynamicResource CsvViewer_TotalRowsLabel}" FontWeight="Bold"/>
+                    <Run Text="{Binding TotalRows, Mode=OneWay}"/>
+                </TextBlock>
+                <TextBlock Margin="12,0,0,0">
+                    <Run Text="{DynamicResource CsvViewer_FilteredRowsLabel}" FontWeight="Bold"/>
+                    <Run Text="{Binding FilteredRowCount, Mode=OneWay}"/>
+                </TextBlock>
+                <TextBlock Margin="12,0,0,0">
+                    <Run Text="{DynamicResource CsvViewer_ColumnsLabel}" FontWeight="Bold"/>
+                    <Run Text="{Binding ColumnCount, Mode=OneWay}"/>
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

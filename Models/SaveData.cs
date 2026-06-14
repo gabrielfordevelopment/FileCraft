@@ -14,6 +14,7 @@ namespace FileCraft.Models
         public FileContentExportSettings FileContentExport { get; set; } = new();
         public FolderContentExportSettings FolderContentExport { get; set; } = new();
         public TreeGeneratorSettings TreeGenerator { get; set; } = new();
+        public CsvViewerSettings CsvViewer { get; set; } = new();
         public SettingsPageSettings SettingsPage { get; set; } = new();
         public PresetSortCriteria PathPresetSortBy { get; set; } = PresetSortCriteria.DateModified;
         public bool PathPresetIsDescending { get; set; } = true;
