@@ -1,6 +1,6 @@
 # FileCraft
 
-FileCraft is a free and open-source desktop utility built with **WPF** and **.NET 9**. 
+FileCraft is a free and open-source desktop utility built with **WPF** and **.NET 10**. 
 
 It is designed to help developers and power users document project structures and bundle source code for analysis, AI prompts, or documentation purposes.
 
@@ -15,7 +15,7 @@ It is designed to help developers and power users document project structures an
 ## 🛠 Technology Stack
 
 *   **Platform:** Windows (WPF)
-*   **Framework:** .NET 9
+*   **Framework:** .NET 10
 *   **Architecture:** MVVM (Model-View-ViewModel)
 *   **Icons:** Material Design Icons
 
