@@ -111,6 +111,15 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Source={x:Static helpers:AppIcons.CsvViewer}, Path=Glyph}" FontFamily="{StaticResource MaterialIcons}" Foreground="{Binding Source={x:Static helpers:AppIcons.CsvViewer}, Path=Brush}" FontSize="28" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource TabCsvViewer}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <views:CsvViewerView DataContext="{Binding CsvViewerVM}"/>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Source={x:Static helpers:AppIcons.Options}, Path=Glyph}" FontFamily="{StaticResource MaterialIcons}" Foreground="{Binding Source={x:Static helpers:AppIcons.Options}, Path=Brush}" FontSize="28" Margin="0,0,5,0" VerticalAlignment="Center"/>
                         <TextBlock Text="{DynamicResource TabOptions}" VerticalAlignment="Center"/>
                     </StackPanel>

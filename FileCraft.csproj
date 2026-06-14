@@ -19,6 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="FileCraft.Tests\**" />
+    <EmbeddedResource Remove="FileCraft.Tests\**" />
+    <None Remove="FileCraft.Tests\**" />
+    <Page Remove="FileCraft.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\app_icon.ico" />
     <Resource Include="Resources\Fonts\MaterialIcons-Regular.ttf" />
   </ItemGroup>

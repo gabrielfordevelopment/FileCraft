@@ -33,6 +33,22 @@ namespace FileCraft.Services
             return null;
         }
 
+        public string? SelectFile(string title, string filter)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = title,
+                Filter = filter
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
+
         public void ShowNotification(string title, string message, DialogIconType iconType)
         {
             var iconDef = GetAppIcon(iconType);

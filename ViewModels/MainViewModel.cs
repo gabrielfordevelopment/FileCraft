@@ -39,6 +39,7 @@ namespace FileCraft.ViewModels
         public FileContentExportViewModel FileContentExportVM { get; }
         public TreeGeneratorViewModel TreeGeneratorVM { get; }
         public FolderContentExportViewModel FolderContentExportVM { get; }
+        public CsvViewerViewModel CsvViewerVM { get; }
         public OptionsViewModel OptionsVM { get; }
 
         public MainViewModel(
@@ -49,6 +50,7 @@ namespace FileCraft.ViewModels
             FileContentExportViewModel fileContentExportVM,
             TreeGeneratorViewModel treeGeneratorVM,
             FolderContentExportViewModel folderContentExportVM,
+            CsvViewerViewModel csvViewerVM,
             OptionsViewModel optionsVM,
             PathSelectionViewModel pathSelectionVM,
             SessionHistoryViewModel sessionHistoryVM)
@@ -61,6 +63,7 @@ namespace FileCraft.ViewModels
             FileContentExportVM = fileContentExportVM;
             TreeGeneratorVM = treeGeneratorVM;
             FolderContentExportVM = folderContentExportVM;
+            CsvViewerVM = csvViewerVM;
             OptionsVM = optionsVM;
             PathSelectionVM = pathSelectionVM;
             SessionHistoryVM = sessionHistoryVM;
@@ -114,6 +117,7 @@ namespace FileCraft.ViewModels
             FileContentExportVM.StateChanging += OnStateChanging;
             TreeGeneratorVM.StateChanging += OnStateChanging;
             FolderContentExportVM.StateChanging += OnStateChanging;
+            CsvViewerVM.StateChanging += OnStateChanging;
             OptionsVM.StateChanging += OnStateChanging;
             PathSelectionVM.StateChanging += OnStateChanging;
         }
@@ -198,6 +202,7 @@ namespace FileCraft.ViewModels
                     FolderTreeState = TreeGeneratorVM.FolderTreeManager.GetFolderStates(),
                     GenerationMode = TreeGeneratorVM.IsStructuredTree ? TreeGenerationMode.Structured : TreeGenerationMode.PathsOnly
                 },
+                CsvViewer = CsvViewerVM.GetSettings(),
                 SettingsPage = new SettingsPageSettings
                 {
                     IgnoredFolders = _sharedStateService.IgnoredFolders,
@@ -236,6 +241,8 @@ namespace FileCraft.ViewModels
             {
                 TreeGeneratorVM.IsStructuredTree = true;
             }
+
+            CsvViewerVM.ApplySettings(saveData.CsvViewer);
 
             SelectedTabIndex = saveData.SelectedTabIndex;
             IsBusy = false;

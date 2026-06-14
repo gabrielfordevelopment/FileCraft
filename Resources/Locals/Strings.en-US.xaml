@@ -14,6 +14,7 @@
     <system:String x:Key="Common_YesButton">Yes</system:String>
     <system:String x:Key="Common_DeleteButton">Delete</system:String>
     <system:String x:Key="Common_CloseButton">Close</system:String>
+    <system:String x:Key="Common_CopyToClipboardButton">Copy to Clipboard</system:String>
 
     <system:String x:Key="Common_SelectAll">Select all</system:String>
     <system:String x:Key="Common_SavedTo">Saved to: {0}</system:String>
@@ -36,6 +37,7 @@
     <system:String x:Key="TabFileContentExport">File Content Export</system:String>
     <system:String x:Key="TabTreeGenerator">Tree Generator</system:String>
     <system:String x:Key="TabFolderContentExport">Folder Content Export</system:String>
+    <system:String x:Key="TabCsvViewer">CSV Viewer</system:String>
     <system:String x:Key="TabOptions">Options</system:String>
 
     <system:String x:Key="ManagePresetsHeader">Manage presets</system:String>
@@ -112,6 +114,40 @@
     <system:String x:Key="FolderContent_ExportTitle">Export Folder Contents</system:String>
     <system:String x:Key="FolderContent_SuccessMessage">Folder contents exported successfully!</system:String>
     <system:String x:Key="FolderContent_ErrorMessage">An unexpected error occurred:&#x0a;{0}</system:String>
+
+    <system:String x:Key="CsvViewer_InputHeader">CSV input</system:String>
+    <system:String x:Key="CsvViewer_FileInputMode">File</system:String>
+    <system:String x:Key="CsvViewer_PastedInputMode">Pasted text</system:String>
+    <system:String x:Key="CsvViewer_PasteInputTooltip">Paste CSV content here.</system:String>
+    <system:String x:Key="CsvViewer_OptionsHeader">CSV options</system:String>
+    <system:String x:Key="CsvViewer_DelimiterModeLabel">Delimiter:</system:String>
+    <system:String x:Key="CsvViewer_DelimiterAuto">Auto</system:String>
+    <system:String x:Key="CsvViewer_DelimiterManual">Manual</system:String>
+    <system:String x:Key="CsvViewer_ManualDelimiterLabel">Use:</system:String>
+    <system:String x:Key="CsvViewer_FirstRowHeader">First row is header</system:String>
+    <system:String x:Key="CsvViewer_SearchPlaceholder">Search all cells...</system:String>
+    <system:String x:Key="CsvViewer_LoadButton">Load CSV</system:String>
+    <system:String x:Key="CsvViewer_TableHeader">CSV table</system:String>
+    <system:String x:Key="CsvViewer_CopyCellTooltip">Copy cell</system:String>
+    <system:String x:Key="CsvViewer_TotalRowsLabel">Rows: </system:String>
+    <system:String x:Key="CsvViewer_FilteredRowsLabel">Filtered: </system:String>
+    <system:String x:Key="CsvViewer_ColumnsLabel">Columns: </system:String>
+    <system:String x:Key="CsvViewer_SelectFileTitle">Select CSV file</system:String>
+    <system:String x:Key="CsvViewer_FileFilter">CSV files (*.csv)|*.csv|Text files (*.txt)|*.txt|All files (*.*)|*.*</system:String>
+    <system:String x:Key="CsvViewer_StatusEmpty">No CSV content loaded.</system:String>
+    <system:String x:Key="CsvViewer_StatusLoading">Loading CSV content...</system:String>
+    <system:String x:Key="CsvViewer_StatusCancelled">CSV loading was cancelled.</system:String>
+    <system:String x:Key="CsvViewer_StatusError">CSV loading failed: {0}</system:String>
+    <system:String x:Key="CsvViewer_StatusLoaded">Loaded {0} rows and {1} columns. Delimiter: {2}</system:String>
+    <system:String x:Key="CsvViewer_StatusCopied">Cell copied to clipboard.</system:String>
+    <system:String x:Key="CsvViewer_StatusCopyFailed">Copy failed: {0}</system:String>
+    <system:String x:Key="CsvViewer_NoWarnings">No warnings.</system:String>
+    <system:String x:Key="CsvViewer_WarningSummary">{0} warning(s)</system:String>
+    <system:String x:Key="CsvViewer_WarningLargeFile">Large file detected ({0} MB). Loading the full file may take time.</system:String>
+    <system:String x:Key="CsvViewer_WarningColumnCount">Row has {0} cell(s), expected {1}.</system:String>
+    <system:String x:Key="CsvViewer_WarningLargeCell">Cell contains {0} characters. Display is shortened, copy still uses the full value.</system:String>
+    <system:String x:Key="CsvViewer_DefaultColumnName">Column {0}</system:String>
+    <system:String x:Key="CsvViewer_CellDetailsTitle">Cell R{0} C{1}</system:String>
 
     <system:String x:Key="ExportOptions_Header">Export options</system:String>
     <system:String x:Key="ExportOptions_FileNameLabel">File name:</system:String>
