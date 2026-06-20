@@ -193,6 +193,7 @@ namespace FileCraft.ViewModels
                     OutputFileName = FolderContentExportVM.OutputFileName,
                     AppendTimestamp = FolderContentExportVM.AppendTimestamp,
                     SelectedColumns = FolderContentExportVM.GetSelectedColumns(),
+                    ProtectSpreadsheetFormulas = FolderContentExportVM.ProtectSpreadsheetFormulas,
                     FolderTreeState = FolderContentExportVM.FolderTreeManager.GetFolderStates()
                 },
                 TreeGenerator = new TreeGeneratorSettings

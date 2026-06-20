@@ -150,15 +150,31 @@
                         </Grid>
                         <Separator/>
                     </StackPanel>
-                    <ListView Grid.Row="1" ItemsSource="{Binding AvailableColumns}" BorderThickness="0"
-                              ItemContainerStyle="{StaticResource SharedListViewItemStyle}"
-                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Name}" VerticalAlignment="Center"/>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ColumnGroups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Expander IsExpanded="{Binding IsExpanded}" Margin="0,2,0,4">
+                                        <Expander.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <CheckBox IsChecked="{Binding AreAllColumnsSelected}" IsThreeState="True" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Expander.Header>
+                                        <ListView ItemsSource="{Binding Columns}" BorderThickness="0"
+                                                  ItemContainerStyle="{StaticResource SharedListViewItemStyle}"
+                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}" VerticalAlignment="Center"/>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Expander>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </GroupBox>
 
@@ -172,6 +188,11 @@
                 </TextBlock>
             </StackPanel>
             <controls:ExportOptionsControl DataContext="{Binding}" />
+            <CheckBox IsChecked="{Binding ProtectSpreadsheetFormulas}"
+                      Content="{DynamicResource FolderContent_ProtectSpreadsheetFormulas}"
+                      ToolTip="{DynamicResource FolderContent_ProtectSpreadsheetFormulasTooltip}"
+                      VerticalAlignment="Center"
+                      Margin="0,0,10,0"/>
             <Button Content="{DynamicResource FolderContent_ExportButton}"
                     Command="{Binding ExportFolderContentsCommand}"/>
         </StackPanel>

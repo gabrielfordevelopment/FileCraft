@@ -106,6 +106,8 @@
 
     <system:String x:Key="FolderContent_DetailsHeader">Select details</system:String>
     <system:String x:Key="FolderContent_FilesAffectedLabel">Files affected:</system:String>
+    <system:String x:Key="FolderContent_ProtectSpreadsheetFormulas">Protect spreadsheet formulas</system:String>
+    <system:String x:Key="FolderContent_ProtectSpreadsheetFormulasTooltip">Prefixes values that could be interpreted as spreadsheet formulas.</system:String>
     <system:String x:Key="FolderContent_ExportButton">Export folder contents</system:String>
 
     <system:String x:Key="FolderContent_NoFoldersSelected">No folders were selected. Please select at least one folder.</system:String>
@@ -114,6 +116,33 @@
     <system:String x:Key="FolderContent_ExportTitle">Export Folder Contents</system:String>
     <system:String x:Key="FolderContent_SuccessMessage">Folder contents exported successfully!</system:String>
     <system:String x:Key="FolderContent_ErrorMessage">An unexpected error occurred:&#x0a;{0}</system:String>
+
+    <system:String x:Key="FolderContent_Group_FileDetails">File details</system:String>
+    <system:String x:Key="FolderContent_Group_AudioTags">Audio tags</system:String>
+    <system:String x:Key="FolderContent_Group_AudioProperties">Audio properties</system:String>
+    <system:String x:Key="FolderContent_Group_Diagnostics">Diagnostics</system:String>
+
+    <system:String x:Key="FolderContent_Column_FileName">Name</system:String>
+    <system:String x:Key="FolderContent_Column_FileSizeBytes">Size (byte)</system:String>
+    <system:String x:Key="FolderContent_Column_FileCreationTime">Creation time</system:String>
+    <system:String x:Key="FolderContent_Column_FileLastWriteTime">Last write time</system:String>
+    <system:String x:Key="FolderContent_Column_FileLastAccessTime">Last access time</system:String>
+    <system:String x:Key="FolderContent_Column_FileIsReadOnly">Is read-only</system:String>
+    <system:String x:Key="FolderContent_Column_FileAttributes">Attributes</system:String>
+    <system:String x:Key="FolderContent_Column_FileFullPath">Full path</system:String>
+    <system:String x:Key="FolderContent_Column_FileParent">Parent</system:String>
+    <system:String x:Key="FolderContent_Column_FileExtension">Format</system:String>
+    <system:String x:Key="FolderContent_Column_AudioTitle">Audio title</system:String>
+    <system:String x:Key="FolderContent_Column_AudioArtist">Audio artist</system:String>
+    <system:String x:Key="FolderContent_Column_AudioAlbum">Album</system:String>
+    <system:String x:Key="FolderContent_Column_AudioAlbumArtist">Album artist</system:String>
+    <system:String x:Key="FolderContent_Column_AudioYear">Year</system:String>
+    <system:String x:Key="FolderContent_Column_AudioGenre">Genre</system:String>
+    <system:String x:Key="FolderContent_Column_AudioTrackNumber">Track number</system:String>
+    <system:String x:Key="FolderContent_Column_AudioDuration">Duration</system:String>
+    <system:String x:Key="FolderContent_Column_AudioIsAudioFile">Is audio file</system:String>
+    <system:String x:Key="FolderContent_Column_AudioMetadataStatus">Metadata status</system:String>
+    <system:String x:Key="FolderContent_Column_AudioMetadataError">Metadata error</system:String>
 
     <system:String x:Key="CsvViewer_InputHeader">CSV input</system:String>
     <system:String x:Key="CsvViewer_FileInputMode">File</system:String>

@@ -43,6 +43,7 @@ namespace FileCraft.Shared.Helpers
                     OutputFileName = originalData.FolderContentExport.OutputFileName,
                     AppendTimestamp = originalData.FolderContentExport.AppendTimestamp,
                     SelectedColumns = originalData.FolderContentExport.SelectedColumns?.ToList() ?? new List<string>(),
+                    ProtectSpreadsheetFormulas = originalData.FolderContentExport.ProtectSpreadsheetFormulas,
                     FolderTreeState = originalData.FolderContentExport.FolderTreeState?.Select(s => new FolderState
                     {
                         FullPath = convertPath(s.FullPath),

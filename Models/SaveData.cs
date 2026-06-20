@@ -43,8 +43,9 @@ namespace FileCraft.Models
 
     public class FolderContentExportSettings : ExportSettingsBase
     {
-        public List<string> SelectedColumns { get; set; } = new();
+        public List<string> SelectedColumns { get; set; } = FolderExportColumns.GetDefaultSelectedColumnIds();
         public List<FolderState> FolderTreeState { get; set; } = new();
+        public bool ProtectSpreadsheetFormulas { get; set; }
 
         public FolderContentExportSettings()
         {

@@ -55,6 +55,7 @@ namespace FileCraft
             services.AddSingleton<ISaveService, SaveService>();
             services.AddSingleton<ISharedStateService, SharedStateService>();
             services.AddSingleton<IFileQueryService, FileQueryService>();
+            services.AddSingleton<IAudioMetadataReaderService, AtlAudioMetadataReaderService>();
             services.AddSingleton<IUndoService, UndoService>();
             services.AddSingleton<IFolderTreeLinkService, FolderTreeLinkService>();
             services.AddSingleton<IPathPresetService, PathPresetService>();

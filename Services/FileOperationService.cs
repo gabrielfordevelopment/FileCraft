@@ -10,19 +10,32 @@ namespace FileCraft.Services
     {
         private readonly ISharedStateService _sharedStateService;
         private readonly IFileQueryService _fileQueryService;
+        private readonly IAudioMetadataReaderService _audioMetadataReaderService;
 
-        public FileOperationService(ISharedStateService sharedStateService, IFileQueryService fileQueryService)
+        public FileOperationService(
+            ISharedStateService sharedStateService,
+            IFileQueryService fileQueryService,
+            IAudioMetadataReaderService audioMetadataReaderService)
         {
             _sharedStateService = sharedStateService;
             _fileQueryService = fileQueryService;
+            _audioMetadataReaderService = audioMetadataReaderService;
         }
 
-        public async Task<string> ExportFolderContentsAsync(string destinationPath, IEnumerable<string> includedFolderPaths, string outputFileName, IEnumerable<string> selectedColumns)
+        public async Task<string> ExportFolderContentsAsync(string destinationPath, IEnumerable<string> includedFolderPaths, string outputFileName, IEnumerable<string> selectedColumns, FolderContentExportOptions options)
         {
             Guard.AgainstNullOrWhiteSpace(destinationPath, nameof(destinationPath));
             Guard.AgainstNullOrEmpty(includedFolderPaths, nameof(includedFolderPaths), "No folders were selected to export from.");
             Guard.AgainstNullOrWhiteSpace(outputFileName, nameof(outputFileName));
             Guard.AgainstNullOrEmpty(selectedColumns, nameof(selectedColumns), "No columns were selected for export.");
+            Guard.AgainstNull(options, nameof(options));
+
+            var selectedColumnDefinitions = selectedColumns
+                .Select(columnId => FolderExportColumns.ById.TryGetValue(columnId, out var definition) ? definition : null)
+                .OfType<FolderExportColumnDefinition>()
+                .ToList();
+
+            Guard.AgainstNullOrEmpty(selectedColumnDefinitions, nameof(selectedColumnDefinitions), "No known columns were selected for export.");
 
             var ignoredFolders = new HashSet<string>(_sharedStateService.IgnoredFolders, StringComparer.OrdinalIgnoreCase);
             var allFiles = _fileQueryService.GetAllFiles(includedFolderPaths, ignoredFolders).OrderBy(f => f.FullName).ToList();
@@ -30,40 +43,65 @@ namespace FileCraft.Services
             Guard.AgainstNullOrEmpty(allFiles, nameof(allFiles), "The selected folders contain no files to export.");
 
             string outputFilePath = Path.Combine(destinationPath, $"{outputFileName}.txt");
+            bool needsAudioMetadata = selectedColumnDefinitions.Any(column => column.RequiresAudioMetadata);
+            var delimitedWriter = new DelimitedTextWriter(';', options.ProtectSpreadsheetFormulas);
 
             using (var writer = new StreamWriter(outputFilePath, false, Encoding.UTF8))
             {
-                await writer.WriteLineAsync(string.Join(";", selectedColumns));
-
-                var columnExtractors = new Dictionary<string, Func<FileInfo, string>>
-                {
-                    { "Name", fi => fi.Name },
-                    { "Size (byte)", fi => fi.Length.ToString() },
-                    { "CreationTime", fi => $"{fi.CreationTime:yyyy-MM-dd HH:mm:ss}" },
-                    { "LastWriteTime", fi => $"{fi.LastWriteTime:yyyy-MM-dd HH:mm:ss}" },
-                    { "LastAccessTime", fi => $"{fi.LastAccessTime:yyyy-MM-dd HH:mm:ss}" },
-                    { "IsReadOnly", fi => fi.IsReadOnly.ToString() },
-                    { "Attributes", fi => fi.Attributes.ToString() },
-                    { "FullPath", fi => fi.FullName },
-                    { "Parent", fi => fi.Directory?.Name ?? string.Empty },
-                    { "Format", fi => fi.Extension }
-                };
+                await delimitedWriter.WriteRecordAsync(writer, selectedColumnDefinitions.Select(column => column.DisplayName));
 
                 foreach (var fileInfo in allFiles)
                 {
-                    var lineParts = new List<string>();
-                    foreach (var column in selectedColumns)
+                    var context = new FolderExportRowContext
                     {
-                        if (columnExtractors.TryGetValue(column, out var extractor))
-                        {
-                            lineParts.Add(extractor(fileInfo));
-                        }
-                    }
-                    await writer.WriteLineAsync(string.Join(";", lineParts));
+                        FileInfo = fileInfo,
+                        Audio = needsAudioMetadata ? _audioMetadataReaderService.Read(fileInfo.FullName) : null
+                    };
+
+                    await delimitedWriter.WriteRecordAsync(writer, selectedColumnDefinitions.Select(column => GetFolderExportValue(context, column.Id)));
                 }
             }
 
             return outputFilePath;
+        }
+
+        private static string GetFolderExportValue(FolderExportRowContext context, string columnId)
+        {
+            var fi = context.FileInfo;
+            var audio = context.Audio;
+
+            return columnId switch
+            {
+                FolderExportColumnIds.FileName => fi.Name,
+                FolderExportColumnIds.FileSizeBytes => fi.Length.ToString(),
+                FolderExportColumnIds.FileCreationTime => $"{fi.CreationTime:yyyy-MM-dd HH:mm:ss}",
+                FolderExportColumnIds.FileLastWriteTime => $"{fi.LastWriteTime:yyyy-MM-dd HH:mm:ss}",
+                FolderExportColumnIds.FileLastAccessTime => $"{fi.LastAccessTime:yyyy-MM-dd HH:mm:ss}",
+                FolderExportColumnIds.FileIsReadOnly => fi.IsReadOnly.ToString(),
+                FolderExportColumnIds.FileAttributes => fi.Attributes.ToString(),
+                FolderExportColumnIds.FileFullPath => fi.FullName,
+                FolderExportColumnIds.FileParent => fi.Directory?.Name ?? string.Empty,
+                FolderExportColumnIds.FileExtension => fi.Extension,
+                FolderExportColumnIds.AudioTitle => audio?.Metadata.Title ?? string.Empty,
+                FolderExportColumnIds.AudioArtist => audio?.Metadata.Artist ?? string.Empty,
+                FolderExportColumnIds.AudioAlbum => audio?.Metadata.Album ?? string.Empty,
+                FolderExportColumnIds.AudioAlbumArtist => audio?.Metadata.AlbumArtist ?? string.Empty,
+                FolderExportColumnIds.AudioYear => audio?.Metadata.Year ?? string.Empty,
+                FolderExportColumnIds.AudioGenre => audio?.Metadata.Genre ?? string.Empty,
+                FolderExportColumnIds.AudioTrackNumber => audio?.Metadata.TrackNumber ?? string.Empty,
+                FolderExportColumnIds.AudioDuration => audio?.Metadata.Duration ?? string.Empty,
+                FolderExportColumnIds.AudioIsAudioFile => (audio?.IsSupportedAudioFile == true).ToString(),
+                FolderExportColumnIds.AudioMetadataStatus => audio?.Status ?? string.Empty,
+                FolderExportColumnIds.AudioMetadataError => audio?.ErrorMessage ?? string.Empty,
+                _ => string.Empty
+            };
+        }
+
+        private sealed class FolderExportRowContext
+        {
+            public required FileInfo FileInfo { get; init; }
+
+            public AudioMetadataReadResult? Audio { get; init; }
         }
 
         public async Task<string> GenerateTreeStructureAsync(string sourcePath, string destinationPath, ISet<string> excludedFolderPaths, string outputFileName, TreeGenerationMode mode)
