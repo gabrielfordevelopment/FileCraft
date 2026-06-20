@@ -18,6 +18,14 @@ These instructions apply to the entire repository.
 - Avoid unrelated refactors.
 - Reuse existing patterns and naming from the codebase.
 - Keep module responsibilities clear (`Services`, `ViewModels`, `Models`, `Shared`).
+- Keep all repository content in English.
+- Use English for code identifiers, code comments, tests, user-facing text, documentation, commit messages, pull request text, and changelog entries.
+- Dependency licensing policy: only MIT or Apache-2.0 licensed runtime libraries are allowed for this project.
+- Do not propose, add, or use LGPL, GPL, AGPL, or other copyleft licenses for runtime dependencies.
+- Before adding a dependency, verify the direct and transitive dependency licenses and update `THIRD-PARTY-NOTICES.md` when the dependency is kept.
+- Create or switch branches only when explicitly requested.
+- Create commits only when explicitly requested.
+- Do not publish branches; the user publishes branches manually.
 
 ## Before coding
 
@@ -37,12 +45,22 @@ These instructions apply to the entire repository.
 - Preserve UTF-8 encoding and do not run bulk encoding or repository-wide search/replace rewrites unless explicitly requested.
 - If mojibake or garbled text is found in files being edited, normalize only the touched text while preserving meaning.
 - Keep comments documentation-oriented and current-state focused; do not add change-history comments.
+- Use concise comments only for non-obvious current behavior or long-term intent; do not add comments that describe a fix, migration, or temporary change history.
 
 ## Testing and validation
 
-- Add or update tests for changed business logic.
+- Add or update tests only when the user explicitly requests test changes.
 - Run `dotnet build FileCraft.sln` and relevant tests after modifications when the environment supports it.
 - Keep changes compile-safe and behaviorally consistent.
+
+## Changelog
+
+- Maintain `CHANGELOG.md` next to `README.md` as the source of truth for user-facing release notes.
+- Keep the newest version at the top.
+- Write changelog entries in English, short, and user-friendly.
+- Focus on user-visible outcomes, not internal implementation details.
+- Prefer clear `Feature` and `Fix` sections for each version block.
+- Make it obvious to users what changed and why it matters.
 
 ## Pull request discipline
 

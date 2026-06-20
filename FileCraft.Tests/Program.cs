@@ -1,10 +1,16 @@
 using FileCraft.Models;
 using FileCraft.Services;
+using FileCraft.Services.Interfaces;
+using System.ComponentModel;
 using System.IO;
 
 var tests = new CsvParserTests();
 tests.RunAll();
 Console.WriteLine("CSV parser tests passed.");
+
+var folderExportTests = new FolderContentExportTests();
+folderExportTests.RunAll();
+Console.WriteLine("Folder content export tests passed.");
 
 internal sealed class CsvParserTests
 {
@@ -156,6 +162,358 @@ internal sealed class CsvParserTests
         if (!condition)
         {
             throw new InvalidOperationException($"{testName} failed.");
+        }
+    }
+}
+
+internal sealed class FolderContentExportTests
+{
+    public void RunAll()
+    {
+        DelimitedWriterEscapesSemicolonQuoteAndNewLine();
+        DelimitedWriterProtectsSpreadsheetFormulas();
+        DelimitedWriterHandlesNullEmptyAndWholeRecords();
+        FolderExportColumnsUseStableIds();
+        FolderExportColumnsDoNotKeepDisplayNameAliases();
+        FolderExportSkipsAudioReaderWhenNoAudioColumnsAreSelected();
+        FolderExportReadsAudioOncePerFileWhenAudioColumnsAreSelected();
+        FolderExportKeepsNonAudioRowsWithEmptyAudioMetadata();
+        FolderExportWritesAudioErrorsAsDiagnostics();
+        FolderExportRejectsUnknownOnlyColumnSelection();
+        FolderExportAppliesFormulaProtectionToMetadataValues();
+    }
+
+    private void DelimitedWriterEscapesSemicolonQuoteAndNewLine()
+    {
+        var writer = new DelimitedTextWriter(';');
+
+        Equal("\"a;b\"", writer.FormatField("a;b"), nameof(DelimitedWriterEscapesSemicolonQuoteAndNewLine));
+        Equal("\"a\"\"b\"", writer.FormatField("a\"b"), nameof(DelimitedWriterEscapesSemicolonQuoteAndNewLine));
+        Equal("\"a\r\nb\"", writer.FormatField("a\r\nb"), nameof(DelimitedWriterEscapesSemicolonQuoteAndNewLine));
+        Equal("abc", writer.FormatField("abc"), nameof(DelimitedWriterEscapesSemicolonQuoteAndNewLine));
+    }
+
+    private void DelimitedWriterProtectsSpreadsheetFormulas()
+    {
+        var writer = new DelimitedTextWriter(';', protectSpreadsheetFormulas: true);
+
+        Equal("'=SUM(A1:A2)", writer.FormatField("=SUM(A1:A2)"), nameof(DelimitedWriterProtectsSpreadsheetFormulas));
+        Equal("'+1", writer.FormatField("+1"), nameof(DelimitedWriterProtectsSpreadsheetFormulas));
+        Equal("'-1", writer.FormatField("-1"), nameof(DelimitedWriterProtectsSpreadsheetFormulas));
+        Equal("'@value", writer.FormatField("@value"), nameof(DelimitedWriterProtectsSpreadsheetFormulas));
+        Equal("\"'=1;2\"", writer.FormatField("=1;2"), nameof(DelimitedWriterProtectsSpreadsheetFormulas));
+        Equal("safe", writer.FormatField("safe"), nameof(DelimitedWriterProtectsSpreadsheetFormulas));
+    }
+
+    private void DelimitedWriterHandlesNullEmptyAndWholeRecords()
+    {
+        var writer = new DelimitedTextWriter(';');
+
+        Equal(string.Empty, writer.FormatField(null), nameof(DelimitedWriterHandlesNullEmptyAndWholeRecords));
+        Equal(string.Empty, writer.FormatField(string.Empty), nameof(DelimitedWriterHandlesNullEmptyAndWholeRecords));
+
+        using var stringWriter = new StringWriter();
+        writer.WriteRecordAsync(stringWriter, new[] { "a", "b;c", "d\"e", string.Empty }).GetAwaiter().GetResult();
+        Equal($"a;\"b;c\";\"d\"\"e\";{Environment.NewLine}", stringWriter.ToString(), nameof(DelimitedWriterHandlesNullEmptyAndWholeRecords));
+    }
+
+    private void FolderExportColumnsUseStableIds()
+    {
+        var defaultIds = FolderExportColumns.GetDefaultSelectedColumnIds();
+
+        True(defaultIds.Contains(FolderExportColumnIds.FileName), nameof(FolderExportColumnsUseStableIds));
+        True(defaultIds.Contains(FolderExportColumnIds.FileFullPath), nameof(FolderExportColumnsUseStableIds));
+        True(!defaultIds.Contains(FolderExportColumnIds.AudioTitle), nameof(FolderExportColumnsUseStableIds));
+    }
+
+    private void FolderExportColumnsDoNotKeepDisplayNameAliases()
+    {
+        True(!FolderExportColumns.ById.ContainsKey("Name"), nameof(FolderExportColumnsDoNotKeepDisplayNameAliases));
+        True(!FolderExportColumns.ById.ContainsKey("Size (byte)"), nameof(FolderExportColumnsDoNotKeepDisplayNameAliases));
+        True(FolderExportColumns.ById.ContainsKey(FolderExportColumnIds.FileName), nameof(FolderExportColumnsDoNotKeepDisplayNameAliases));
+    }
+
+    private void FolderExportSkipsAudioReaderWhenNoAudioColumnsAreSelected()
+    {
+        using var fixture = FolderExportFixture.Create(("plain.txt", "content"));
+        var audioReader = new FakeAudioMetadataReader();
+        var service = fixture.CreateService(audioReader);
+
+        var outputPath = service.ExportFolderContentsAsync(
+            fixture.OutputDirectory,
+            new[] { fixture.SourceDirectory },
+            "file-only",
+            new[] { FolderExportColumnIds.FileName, FolderExportColumnIds.FileExtension },
+            new FolderContentExportOptions()).GetAwaiter().GetResult();
+
+        var lines = File.ReadAllLines(outputPath);
+        Equal("Name;Format", lines[0], nameof(FolderExportSkipsAudioReaderWhenNoAudioColumnsAreSelected));
+        Equal("plain.txt;.txt", lines[1], nameof(FolderExportSkipsAudioReaderWhenNoAudioColumnsAreSelected));
+        Equal(0, audioReader.ReadCalls, nameof(FolderExportSkipsAudioReaderWhenNoAudioColumnsAreSelected));
+    }
+
+    private void FolderExportReadsAudioOncePerFileWhenAudioColumnsAreSelected()
+    {
+        using var fixture = FolderExportFixture.Create(("one.mp3", "fake"), ("two.flac", "fake"));
+        var audioReader = new FakeAudioMetadataReader();
+        audioReader.Results[fixture.PathFor("one.mp3")] = SuccessfulAudio("Artist A", "Title A");
+        audioReader.Results[fixture.PathFor("two.flac")] = SuccessfulAudio("Artist B", "Title B");
+        var service = fixture.CreateService(audioReader);
+
+        var outputPath = service.ExportFolderContentsAsync(
+            fixture.OutputDirectory,
+            new[] { fixture.SourceDirectory },
+            "audio",
+            new[] { FolderExportColumnIds.FileName, FolderExportColumnIds.AudioArtist, FolderExportColumnIds.AudioTitle },
+            new FolderContentExportOptions()).GetAwaiter().GetResult();
+
+        var lines = File.ReadAllLines(outputPath);
+        Equal("Name;Audio artist;Audio title", lines[0], nameof(FolderExportReadsAudioOncePerFileWhenAudioColumnsAreSelected));
+        True(lines.Contains("one.mp3;Artist A;Title A"), nameof(FolderExportReadsAudioOncePerFileWhenAudioColumnsAreSelected));
+        True(lines.Contains("two.flac;Artist B;Title B"), nameof(FolderExportReadsAudioOncePerFileWhenAudioColumnsAreSelected));
+        Equal(2, audioReader.ReadCalls, nameof(FolderExportReadsAudioOncePerFileWhenAudioColumnsAreSelected));
+    }
+
+    private void FolderExportKeepsNonAudioRowsWithEmptyAudioMetadata()
+    {
+        using var fixture = FolderExportFixture.Create(("plain.txt", "content"));
+        var audioReader = new FakeAudioMetadataReader();
+        audioReader.Results[fixture.PathFor("plain.txt")] = AudioMetadataReadResult.NotAudio;
+        var service = fixture.CreateService(audioReader);
+
+        var outputPath = service.ExportFolderContentsAsync(
+            fixture.OutputDirectory,
+            new[] { fixture.SourceDirectory },
+            "not-audio",
+            new[] { FolderExportColumnIds.FileName, FolderExportColumnIds.AudioArtist, FolderExportColumnIds.AudioIsAudioFile, FolderExportColumnIds.AudioMetadataStatus },
+            new FolderContentExportOptions()).GetAwaiter().GetResult();
+
+        var lines = File.ReadAllLines(outputPath);
+        Equal("plain.txt;;False;Not audio", lines[1], nameof(FolderExportKeepsNonAudioRowsWithEmptyAudioMetadata));
+        Equal(1, audioReader.ReadCalls, nameof(FolderExportKeepsNonAudioRowsWithEmptyAudioMetadata));
+    }
+
+    private void FolderExportWritesAudioErrorsAsDiagnostics()
+    {
+        using var fixture = FolderExportFixture.Create(("broken.mp3", "fake"));
+        var audioReader = new FakeAudioMetadataReader();
+        audioReader.Results[fixture.PathFor("broken.mp3")] = new AudioMetadataReadResult
+        {
+            IsSupportedAudioFile = true,
+            Success = false,
+            Status = "Error",
+            ErrorMessage = "bad;tag"
+        };
+        var service = fixture.CreateService(audioReader);
+
+        var outputPath = service.ExportFolderContentsAsync(
+            fixture.OutputDirectory,
+            new[] { fixture.SourceDirectory },
+            "error",
+            new[] { FolderExportColumnIds.FileName, FolderExportColumnIds.AudioMetadataStatus, FolderExportColumnIds.AudioMetadataError },
+            new FolderContentExportOptions()).GetAwaiter().GetResult();
+
+        var lines = File.ReadAllLines(outputPath);
+        Equal("broken.mp3;Error;\"bad;tag\"", lines[1], nameof(FolderExportWritesAudioErrorsAsDiagnostics));
+    }
+
+    private void FolderExportRejectsUnknownOnlyColumnSelection()
+    {
+        using var fixture = FolderExportFixture.Create(("plain.txt", "content"));
+        var service = fixture.CreateService(new FakeAudioMetadataReader());
+
+        Throws<ArgumentException>(() => service.ExportFolderContentsAsync(
+            fixture.OutputDirectory,
+            new[] { fixture.SourceDirectory },
+            "unknown",
+            new[] { "Name", "unknown.column" },
+            new FolderContentExportOptions()).GetAwaiter().GetResult(), nameof(FolderExportRejectsUnknownOnlyColumnSelection));
+    }
+
+    private void FolderExportAppliesFormulaProtectionToMetadataValues()
+    {
+        using var fixture = FolderExportFixture.Create(("formula.mp3", "fake"));
+        var audioReader = new FakeAudioMetadataReader();
+        audioReader.Results[fixture.PathFor("formula.mp3")] = SuccessfulAudio("=Danger", "+Title");
+        var service = fixture.CreateService(audioReader);
+
+        var outputPath = service.ExportFolderContentsAsync(
+            fixture.OutputDirectory,
+            new[] { fixture.SourceDirectory },
+            "formula",
+            new[] { FolderExportColumnIds.AudioArtist, FolderExportColumnIds.AudioTitle },
+            new FolderContentExportOptions { ProtectSpreadsheetFormulas = true }).GetAwaiter().GetResult();
+
+        var lines = File.ReadAllLines(outputPath);
+        Equal("'=Danger;'+Title", lines[1], nameof(FolderExportAppliesFormulaProtectionToMetadataValues));
+    }
+
+    private static AudioMetadataReadResult SuccessfulAudio(string artist, string title)
+    {
+        return new AudioMetadataReadResult
+        {
+            IsSupportedAudioFile = true,
+            Success = true,
+            Status = "OK",
+            Metadata = new AudioMetadata
+            {
+                Artist = artist,
+                Title = title,
+                Album = "Album",
+                AlbumArtist = artist,
+                Year = "2024",
+                Genre = "Genre",
+                TrackNumber = "1",
+                Duration = "3:10"
+            }
+        };
+    }
+
+    private static void Equal<T>(T expected, T actual, string testName)
+    {
+        if (!EqualityComparer<T>.Default.Equals(expected, actual))
+        {
+            throw new InvalidOperationException($"{testName} failed. Expected '{expected}', got '{actual}'.");
+        }
+    }
+
+    private static void True(bool condition, string testName)
+    {
+        if (!condition)
+        {
+            throw new InvalidOperationException($"{testName} failed.");
+        }
+    }
+
+    private static void Throws<TException>(Action action, string testName) where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (TException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"{testName} failed. Expected {typeof(TException).Name}, got {ex.GetType().Name}.", ex);
+        }
+
+        throw new InvalidOperationException($"{testName} failed. Expected {typeof(TException).Name}, got no exception.");
+    }
+
+    private sealed class FolderExportFixture : IDisposable
+    {
+        public string RootDirectory { get; }
+        public string SourceDirectory { get; }
+        public string OutputDirectory { get; }
+        public List<FileInfo> Files { get; } = new();
+
+        private FolderExportFixture(string rootDirectory)
+        {
+            RootDirectory = rootDirectory;
+            SourceDirectory = Path.Combine(rootDirectory, "source");
+            OutputDirectory = Path.Combine(rootDirectory, "output");
+            Directory.CreateDirectory(SourceDirectory);
+            Directory.CreateDirectory(OutputDirectory);
+        }
+
+        public static FolderExportFixture Create(params (string Name, string Content)[] files)
+        {
+            var fixture = new FolderExportFixture(Path.Combine(Path.GetTempPath(), "FileCraftTests", Guid.NewGuid().ToString("N")));
+
+            foreach (var file in files)
+            {
+                var path = Path.Combine(fixture.SourceDirectory, file.Name);
+                File.WriteAllText(path, file.Content);
+                fixture.Files.Add(new FileInfo(path));
+            }
+
+            return fixture;
+        }
+
+        public string PathFor(string fileName)
+        {
+            return Path.Combine(SourceDirectory, fileName);
+        }
+
+        public FileOperationService CreateService(FakeAudioMetadataReader audioReader)
+        {
+            return new FileOperationService(
+                new FakeSharedStateService(),
+                new FakeFileQueryService(Files),
+                audioReader);
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(RootDirectory))
+            {
+                Directory.Delete(RootDirectory, recursive: true);
+            }
+        }
+    }
+
+    private sealed class FakeSharedStateService : ISharedStateService
+    {
+        public string SourcePath { get; set; } = string.Empty;
+        public string DestinationPath { get; set; } = string.Empty;
+        public List<string> IgnoredFolders { get; set; } = new();
+
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+        {
+            add { }
+            remove { }
+        }
+    }
+
+    private sealed class FakeFileQueryService : IFileQueryService
+    {
+        private readonly List<FileInfo> _files;
+
+        public FakeFileQueryService(IEnumerable<FileInfo> files)
+        {
+            _files = files.ToList();
+        }
+
+        public HashSet<string> GetAvailableExtensions(IEnumerable<(string Path, bool Recursive)> folderConfigs, ISet<string> ignoredFolderNames)
+        {
+            return _files.Select(file => file.Extension).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public IEnumerable<SelectableFile> GetFilesByExtensions(string basePath, IEnumerable<(string Path, bool Recursive)> folderConfigs, ISet<string> selectedExtensions, ISet<string> ignoredFolderNames)
+        {
+            return _files
+                .Where(file => selectedExtensions.Contains(file.Extension))
+                .Select(file => new SelectableFile
+                {
+                    FileName = file.Name,
+                    FullPath = file.FullName,
+                    RelativePath = Path.GetRelativePath(basePath, file.FullName)
+                });
+        }
+
+        public IEnumerable<FileInfo> GetAllFiles(IEnumerable<string> folderPaths, ISet<string> ignoredFolderNames)
+        {
+            return _files;
+        }
+    }
+
+    private sealed class FakeAudioMetadataReader : IAudioMetadataReaderService
+    {
+        public Dictionary<string, AudioMetadataReadResult> Results { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public int ReadCalls { get; private set; }
+
+        public bool IsSupportedAudioFile(string filePath)
+        {
+            return Results.TryGetValue(filePath, out var result) && result.IsSupportedAudioFile;
+        }
+
+        public AudioMetadataReadResult Read(string filePath)
+        {
+            ReadCalls++;
+            return Results.TryGetValue(filePath, out var result) ? result : AudioMetadataReadResult.NotAudio;
         }
     }
 }

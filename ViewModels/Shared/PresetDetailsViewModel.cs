@@ -296,7 +296,8 @@ namespace FileCraft.ViewModels.Shared
                 sb.AppendLine($"Output: {data.FolderContentExport.OutputFileName}");
                 if (data.FolderContentExport.SelectedColumns.Any())
                 {
-                    sb.AppendLine($"Columns: {string.Join(", ", data.FolderContentExport.SelectedColumns)}");
+                    var displayColumns = data.FolderContentExport.SelectedColumns.Select(FolderExportColumns.GetDisplayName);
+                    sb.AppendLine($"Columns: {string.Join(", ", displayColumns)}");
                 }
             }
 
