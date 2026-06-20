@@ -9,8 +9,8 @@ All notable user-facing changes to FileCraft are documented here.
 ### Feature
 
 - Added CSV Viewer as a new tab for loading, viewing, searching, and copying CSV data.
-- Added audio metadata export planning and implementation groundwork for Folder Content Export.
+- Added audio metadata export for Folder Content Export without adding extra runtime library licensing risk.
 
 ### Fix
 
-- No fixes yet.
+- Added project and third-party license documentation for the release.

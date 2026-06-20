@@ -20,6 +20,9 @@ These instructions apply to the entire repository.
 - Keep module responsibilities clear (`Services`, `ViewModels`, `Models`, `Shared`).
 - Keep all repository content in English.
 - Use English for code identifiers, code comments, tests, user-facing text, documentation, commit messages, pull request text, and changelog entries.
+- Dependency licensing policy: only MIT or Apache-2.0 licensed runtime libraries are allowed for this project.
+- Do not propose, add, or use LGPL, GPL, AGPL, or other copyleft licenses for runtime dependencies.
+- Before adding a dependency, verify the direct and transitive dependency licenses and update `THIRD-PARTY-NOTICES.md` when the dependency is kept.
 - Create or switch branches only when explicitly requested.
 - Create commits only when explicitly requested.
 - Do not publish branches; the user publishes branches manually.

@@ -33,4 +33,6 @@ It is designed to help developers and power users document project structures an
 
 ## License
 
-This project is open-source and free to use.
+FileCraft is free and open-source software licensed under the MIT License. See [LICENSE](LICENSE).
+
+Third-party component licenses are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
