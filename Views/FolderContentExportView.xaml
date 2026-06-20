@@ -161,15 +161,15 @@
                                                 <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Expander.Header>
-                                        <ListView ItemsSource="{Binding Columns}" BorderThickness="0"
-                                                  ItemContainerStyle="{StaticResource SharedListViewItemStyle}"
-                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                            <ListView.ItemTemplate>
+                                        <ItemsControl ItemsSource="{Binding Columns}">
+                                            <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}" VerticalAlignment="Center"/>
+                                                    <Border Padding="4,1">
+                                                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}" VerticalAlignment="Center"/>
+                                                    </Border>
                                                 </DataTemplate>
-                                            </ListView.ItemTemplate>
-                                        </ListView>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </Expander>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
